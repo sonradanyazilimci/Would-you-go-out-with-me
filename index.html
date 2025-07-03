@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benimle Çıkar Mısın?</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+      touch-action: manipulation;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+      max-width: 90%;
+      position: relative;
+      z-index: 1;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    #yesButton {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #noButton {
+      background-color: #ff4444;
+      color: white;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+    #timer {
+      font-size: 20px;
+      color: #d32f2f;
+      margin: 10px;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    @media (max-width: 600px) {
+      button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+      .container {
+        padding: 10px;
+      }
+      #timer, #result {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1> Benimle Çıkar Mısın?</h1>
+    <div id="question">
+      <p id="timer">Kalan süre: 20</p>
+      <button id="yesButton" onclick="sayYes()">Evet</button>
+      <button id="noButton" onmouseenter="moveNoButton()" ontouchstart="moveNoButton()">Hayır</button>
+    </div>
+    <p id="result"></p>
+  </div>
+  <canvas id="celebrationCanvas"></canvas>
+  <script>
+    let timeLeft = 20;
+    let timerId;
+    let particles = [];
+    const canvas = document.getElementById('celebrationCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    function startTimer() {
+      document.getElementById('timer').innerText = `Kalan süre: ${timeLeft}`;
+      timerId = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = `Kalan süre: ${timeLeft}`;
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          showCelebration('Teklifimi kabul ettinnnnnn. Çok mutluyummmmmm 😍');
+        }
+      }, 1000);
+    }
+
+    function sayYes() {
+      clearInterval(timerId);
+      showCelebration('Yaşasın! Harika bir karar! 😍');
+    }
+
+    function showCelebration(message) {
+      document.getElementById('result').innerText = message;
+      document.getElementById('question').style.display = 'none';
+      startFireworks();
+    }
+
+    function moveNoButton() {
+      const noButton = document.getElementById('noButton');
+      const container = document.querySelector('.container');
+      const maxX = container.clientWidth - noButton.offsetWidth;
+      const maxY = container.clientHeight - noButton.offsetHeight;
+      const newX = Math.random() * maxX;
+      const newY = Math.random() * maxY;
+      noButton.style.position = 'absolute';
+      noButton.style.left = `${newX}px`;
+      noButton.style.top = `${newY}px`;
+    }
+
+    function startFireworks() {
+      for (let i = 0; i < 50; i++) {
+        particles.push(createParticle('firework'));
+        particles.push(createParticle('heart'));
+      }
+      animate();
+    }
+
+    function createParticle(type) {
+      const x = canvas.width * Math.random();
+      const y = canvas.height * Math.random();
+      const vx = (Math.random() - 0.5) * 8;
+      const vy = (Math.random() - 0.5) * 8;
+      const size = type === 'heart' ? 20 : Math.random() * 5 + 2;
+      const color = type === 'heart' ? '#ff4444' : `hsl(${Math.random() * 360}, 100%, 50%)`;
+      return { x, y, vx, vy, size, color, type, alpha: 1 };
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.005;
+        if (p.alpha <= 0) return;
+        ctx.globalAlpha = p.alpha;
+        if (p.type === 'heart') {
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y + p.size / 4);
+          ctx.quadraticCurveTo(p.x - p.size / 2, p.y - p.size / 2, p.x, p.y - p.size);
+          ctx.quadraticCurveTo(p.x + p.size / 2, p.y - p.size / 2, p.x, p.y + p.size / 4);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        }
+      });
+      particles = particles.filter(p => p.alpha > 0);
+      if (particles.length > 0) requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    startTimer();
+  </script>
+</body>
+</html>
